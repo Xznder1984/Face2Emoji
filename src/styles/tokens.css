@@ -1,0 +1,55 @@
+/*
+ * Design tokens.
+ *
+ * Every colour pair listed in check-contrast.mjs is verified by
+ * `npm test`. The measured ratios are recorded in ACCESSIBILITY.md.
+ * If you change a value here, the script must still pass.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Colour */
+  --paper: #edf0ee;
+  --surface: #ffffff;
+  --on-accent: #ffffff;
+  --ink: #16211d;
+  --muted: #46544e;
+  --accent: #00625f;
+  --accent-hover: #004a48;
+  --tint: #d3e2de;
+  --error: #a1231b;
+  --line: #7b8983;
+  --stage: #16211d;
+  --on-stage: #f3f6f4;
+  --on-stage-muted: #b7c4be;
+  --face: #ffd23f;
+
+  /* Type. System fonts only, so nothing is fetched from a third party. */
+  --font: Bahnschrift, 'Segoe UI Variable Text', 'Segoe UI', 'Avenir Next', system-ui, sans-serif;
+  --mono: 'Cascadia Mono', Consolas, ui-monospace, monospace;
+  --emoji-font: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+
+  /* Spacing scale: multiples of 0.25rem only. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Two radii: one for panels, one for controls. */
+  --radius-panel: 0.5rem;
+  --radius-control: 0.25rem;
+
+  /* WCAG 2.2 target size, minimum. */
+  --touch-target: 2.75rem;
+
+  /* Focus indicator: 3px outline, 3px offset. */
+  --focus-width: 3px;
+  --focus-offset: 3px;
+
+  --measure: 65ch;
+  --border: 1px solid var(--line);
+}

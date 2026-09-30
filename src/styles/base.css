@@ -1,0 +1,190 @@
+/* Reset, page frame, landmarks, focus, media-query overrides. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.55;
+  /* Nothing may cause sideways scrolling, from 320px upwards. */
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  margin: 0 0 var(--space-3);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font-size: 1.25rem;
+}
+
+h3 {
+  font-size: 1.0625rem;
+}
+
+p,
+li {
+  max-width: var(--measure);
+}
+
+p {
+  margin: 0 0 var(--space-4);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+a:active {
+  color: var(--accent-hover);
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--mono);
+  font-size: 0.9375em;
+}
+
+pre {
+  overflow-x: auto;
+  padding: var(--space-4);
+  background: var(--tint);
+  border-radius: var(--radius-panel);
+}
+
+hr {
+  border: 0;
+  border-top: var(--border);
+  margin: var(--space-8) 0;
+}
+
+/* One focus treatment everywhere, always visible. */
+:focus-visible {
+  outline: var(--focus-width) solid var(--accent);
+  outline-offset: var(--focus-offset);
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-2);
+  top: var(--space-2);
+  z-index: 10;
+  padding: var(--space-2) var(--space-3);
+  background: var(--paper);
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-control);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Keyboard focus on the details summary must survive forced colours. */
+summary {
+  cursor: pointer;
+}
+
+summary::marker {
+  color: var(--accent);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Operating-system high contrast mode. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: var(--focus-width) solid Highlight;
+  }
+
+  .panel,
+  .btn,
+  .option,
+  .photo-card,
+  .readings-table,
+  .readings-table td,
+  .readings-table th {
+    border: 1px solid CanvasText;
+  }
+
+  .panel {
+    background: Canvas;
+  }
+
+  .on-stage {
+    color: CanvasText;
+  }
+
+  .on-stage-muted {
+    color: GrayText;
+  }
+
+  .btn-primary {
+    border: 1px solid CanvasText;
+  }
+
+  meter {
+    border: 1px solid CanvasText;
+  }
+}

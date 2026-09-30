@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Face to Emoji: match your face to an emoji, in your browser</title>
+    <meta
+      name="description"
+      content="Point a webcam at your face and see the closest matching emoji. The camera frames are read in your browser tab and are never uploaded, stored or recorded."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data: https://upload.wikimedia.org; connect-src 'self' https://commons.wikimedia.org; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/styles/tokens.css" />
+    <link rel="stylesheet" href="./src/styles/base.css" />
+    <link rel="stylesheet" href="./src/styles/components.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to the app</a>
+
+    <header class="site-header">
+      <h1>Face to Emoji</h1>
+      <p class="lede">
+        This reads the movements of your face in this tab and shows the closest matching emoji,
+        without uploading or storing anything.
+      </p>
+    </header>
+
+    <main class="app" id="main">
+      <div class="panels">
+        <section class="panel" aria-labelledby="camera-heading">
+          <h2 class="visually-hidden" id="camera-heading">Camera preview</h2>
+          <video class="preview" id="preview" playsinline muted hidden aria-hidden="true"></video>
+          <canvas class="overlay" id="overlay" aria-hidden="true" width="640" height="480"></canvas>
+          <p class="panel-note" id="camera-note">Camera is off. Press Start camera.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="emoji-heading">
+          <h2 class="visually-hidden" id="emoji-heading">Matched emoji</h2>
+          <div class="emoji-roll" id="emoji-roll" aria-hidden="true">
+            <span class="emoji-glyph" id="emoji-glyph">&#128528;</span>
+          </div>
+          <div class="emoji-live" id="emoji-live" hidden></div>
+          <p class="emoji-label" id="expression-label" aria-live="polite" aria-atomic="true">
+            Waiting for your face
+          </p>
+        </section>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-primary" type="button" id="start">Start camera</button>
+        <button class="btn" type="button" id="stop" aria-disabled="true">Stop camera</button>
+        <button class="btn" type="button" id="neutral" aria-disabled="true">Set neutral face</button>
+      </div>
+
+      <fieldset class="options">
+        <legend>Options</legend>
+        <div class="option">
+          <input type="checkbox" id="photos-toggle" />
+          <label for="photos-toggle">
+            Show photos of this expression (sends a short phrase like &ldquo;surprised face&rdquo; to
+            Wikimedia Commons)
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="options">
+        <legend>Display</legend>
+        <div class="option">
+          <input type="radio" name="display" id="display-emoji" value="emoji" checked />
+          <label for="display-emoji">Match an emoji</label>
+        </div>
+        <div class="option">
+          <input type="radio" name="display" id="display-live" value="live" />
+          <label for="display-live">Live emoji face</label>
+        </div>
+      </fieldset>
+
+      <p class="status" id="status" role="status">Camera is off.</p>
+
+      <details class="readings" id="readings">
+        <summary>Live readings (the tuning tool)</summary>
+        <table class="readings-table">
+          <caption class="visually-hidden">
+            The eight strongest smoothed signals in this frame
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Signal</th>
+              <th scope="col">Level</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody id="readings-body"></tbody>
+        </table>
+      </details>
+
+      <section class="photos" aria-labelledby="photos-heading">
+        <h2 id="photos-heading">Photos of this expression</h2>
+        <p class="status" id="photo-status" role="status">
+          Photo lookup is off. Nothing is sent to Wikimedia.
+        </p>
+        <div class="photo-grid" id="photo-grid"></div>
+        <p class="note">
+          Photos come from Wikimedia Commons and are contributed by volunteers. Anyone can upload
+          one, so results are not reviewed and may not suit every audience. Each photo shows its
+          creator and licence; check the licence before you reuse it.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Your camera frames stay in this tab. Nothing is uploaded, stored or recorded, and there are
+        no cookies. If you turn photo lookup on, a short search phrase and your IP address go to
+        Wikimedia Commons.
+      </p>
+      <p>
+        Face tracking by
+        <a href="https://github.com/google-ai-edge/mediapipe">MediaPipe</a> (Apache-2.0). Photos
+        from <a href="https://commons.wikimedia.org/">Wikimedia Commons</a>.
+      </p>
+      <nav aria-label="Footer">
+        <ul class="footer-links">
+          <li><a href="./index.html">The app</a></li>
+          <li><a href="./privacy.html">Privacy</a></li>
+          <li><a href="./terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

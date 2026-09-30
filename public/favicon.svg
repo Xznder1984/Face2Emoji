@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Face to Emoji">
+  <!-- Original drawing for this project. Traced from nothing. -->
+  <rect width="64" height="64" rx="12" fill="#16211d" />
+  <circle cx="32" cy="32" r="19" fill="#ffd23f" />
+  <circle cx="25" cy="27" r="2.6" fill="#16211d" />
+  <circle cx="39" cy="27" r="2.6" fill="#16211d" />
+  <path d="M22 37c2.5 5 17.5 5 20 0" fill="none" stroke="#16211d" stroke-width="3" stroke-linecap="round" />
+</svg>

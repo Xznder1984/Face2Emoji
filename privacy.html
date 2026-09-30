@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy: Face to Emoji</title>
+    <meta
+      name="description"
+      content="How Face to Emoji handles your camera: frames are read in your browser tab, nothing is uploaded, stored or recorded, and nothing leaves your device unless you turn photo lookup on."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' data: https://upload.wikimedia.org; connect-src 'self' https://commons.wikimedia.org; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/styles/tokens.css" />
+    <link rel="stylesheet" href="./src/styles/base.css" />
+    <link rel="stylesheet" href="./src/styles/components.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to the content</a>
+
+    <header class="site-header">
+      <p class="wordmark"><a href="./index.html">Face to Emoji</a></p>
+    </header>
+
+    <main class="app prose" id="main">
+      <h1>Privacy</h1>
+      <p>
+        This page is in plain words. It is a description of what the code does, not legal advice.
+      </p>
+
+      <h2>What happens to your camera</h2>
+      <p>
+        When you press <strong>Start camera</strong>, the browser gives this page a live video
+        stream from your webcam. Each frame is measured inside the tab, in your browser's memory,
+        to work out where your face is and how it is moving. The results are a set of numbers, not
+        a picture.
+      </p>
+      <p>
+        When you close or reload the page, the video stream and those numbers are gone. The neutral
+        face you set with <strong>Set neutral face</strong> is only held in memory too, so it is
+        forgotten on reload. There is no save button, no record button and no screenshot feature.
+      </p>
+
+      <h2>What never happens</h2>
+      <ul>
+        <li>Your camera frames are never uploaded anywhere.</li>
+        <li>They are never stored, logged, or written to disk.</li>
+        <li>They are never recorded, and there is no code to record them.</li>
+        <li>You are never identified, and no attempt is made to recognise you.</li>
+        <li>No profile, score or history is built about you.</li>
+      </ul>
+
+      <h2>What leaves your device</h2>
+      <p>
+        Nothing, by default. The face model and its WebAssembly files are served from this site's
+        own address, so loading the model sends no information about you anywhere else.
+      </p>
+      <p>
+        The one exception is the photo search, and it is off until you tick its box. If you tick
+        <strong>Show photos of this expression</strong>, this page sends a short text search phrase
+        such as <q>surprised face</q> to the Wikimedia Commons application programming interface.
+        Wikimedia receives that phrase and your IP address, as any web server does, and its own
+        privacy policy applies from that point on. Nothing about your face, camera or camera
+        settings is part of that request. Ticking the box off again stops all of it immediately.
+      </p>
+
+      <h2>Cookies and similar storage</h2>
+      <p>
+        None are used. There is no cookie, no <code>localStorage</code>, no
+        <code>sessionStorage</code>, no IndexedDB, no analytics, no tracking pixel and no
+        third-party font or script. Nothing about your visit is recorded by this site.
+      </p>
+      <p>
+        Because no cookie or similar storage is used, there is no consent banner here and none is
+        needed. If that ever changes, a consent step will be added before anything is stored or sent.
+      </p>
+
+      <h2>Facial data and the law</h2>
+      <p>
+        Facial information is treated as sensitive personal data. Indonesia's Personal Data
+        Protection Law (Law No. 27 of 2022) treats biometric data as a specific category of
+        personal data, and the EU's General Data Protection Regulation treats biometric data used
+        to identify a person the same way.
+      </p>
+      <p>
+        This app does not identify anyone. It measures the movement of a face and compares it with
+        a list of fixed expressions, and it throws the numbers away. It is built to keep nothing
+        precisely so that there is no facial data to lose, leak or hand over. That is a design
+        choice, not a legal claim.
+      </p>
+
+      <!--
+        A contact section belongs here only when `contactEmail` in config.ts is
+        set. It is empty, so nothing is rendered. Do not add placeholder text.
+      -->
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Your camera frames stay in this tab. Nothing is uploaded, stored or recorded, and there are
+        no cookies. If you turn photo lookup on, a short search phrase and your IP address go to
+        Wikimedia Commons.
+      </p>
+      <p>
+        Face tracking by
+        <a href="https://github.com/google-ai-edge/mediapipe">MediaPipe</a> (Apache-2.0). Photos
+        from <a href="https://commons.wikimedia.org/">Wikimedia Commons</a>.
+      </p>
+      <nav aria-label="Footer">
+        <ul class="footer-links">
+          <li><a href="./index.html">The app</a></li>
+          <li><a href="./privacy.html">Privacy</a></li>
+          <li><a href="./terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </footer>
+  </body>
+</html>

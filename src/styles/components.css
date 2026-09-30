@@ -1,0 +1,368 @@
+/* Panels, controls, status line, readings table, photo grid, footer. */
+
+.app,
+.site-header,
+.site-footer {
+  max-width: 70rem;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+.site-header {
+  padding-block: var(--space-6) var(--space-4);
+}
+
+.wordmark {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.lede {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 1.125rem;
+}
+
+/* Panels ------------------------------------------------------------------ */
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+@media (min-width: 48rem) {
+  .panels {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.panel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--stage);
+  border-radius: var(--radius-panel);
+  color: var(--on-stage);
+}
+
+.panel > .visually-hidden {
+  position: absolute;
+}
+
+.preview,
+.overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The preview is mirrored so it behaves like a looking glass. */
+  transform: scaleX(-1);
+}
+
+.overlay {
+  pointer-events: none;
+}
+
+.panel-note {
+  margin: 0;
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--on-stage-muted);
+}
+
+/* The memorable element: a big emoji on a flat dark panel. */
+.emoji-roll {
+  transform: rotate(var(--roll, 0deg));
+}
+
+.emoji-glyph {
+  display: block;
+  font-family: var(--emoji-font);
+  font-size: clamp(4rem, 22vmin, 8rem);
+  line-height: 1;
+  transition: scale 140ms ease-out;
+}
+
+.emoji-glyph[data-pop="on"] {
+  scale: 1.18;
+}
+
+.emoji-live svg {
+  width: min(70%, 16rem);
+  height: auto;
+}
+
+.emoji-label {
+  position: absolute;
+  bottom: var(--space-4);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding-inline: var(--space-4);
+  text-align: center;
+  font-size: 1.125rem;
+  color: var(--on-stage);
+}
+
+/* Controls ---------------------------------------------------------------- */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+}
+
+.btn:hover {
+  background: var(--tint);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.btn:active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--paper);
+}
+
+.btn-primary:active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+/* aria-disabled keeps the control focusable and operable. It reports a real
+   message instead of silently doing nothing. */
+.btn[aria-disabled='true'] {
+  color: var(--muted);
+  background: var(--paper);
+  border-color: var(--line);
+}
+
+.btn[aria-disabled='true']:hover {
+  background: var(--paper);
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+/* Option groups ----------------------------------------------------------- */
+
+.options {
+  margin: var(--space-6) 0 0;
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius-panel);
+}
+
+.options legend {
+  padding-inline: var(--space-2);
+  font-weight: 600;
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: var(--touch-target);
+  padding-block: var(--space-3);
+}
+
+.option + .option {
+  border-top: var(--border);
+}
+
+.option input[type='checkbox'],
+.option input[type='radio'] {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.option label {
+  padding-top: var(--space-1);
+  cursor: pointer;
+}
+
+/* Status ------------------------------------------------------------------ */
+
+.status {
+  min-height: 1.55rem;
+  margin: var(--space-4) 0 0;
+  color: var(--muted);
+}
+
+.status[data-kind='error'] {
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* Live readings ----------------------------------------------------------- */
+
+.readings {
+  margin-top: var(--space-6);
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius-panel);
+}
+
+.readings summary {
+  min-height: var(--touch-target);
+  padding-block: var(--space-2);
+  font-weight: 600;
+}
+
+.readings-table {
+  width: 100%;
+  margin-top: var(--space-2);
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.readings-table th,
+.readings-table td {
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.readings-table th {
+  font-weight: 600;
+}
+
+.readings-table td:nth-child(2) {
+  width: 45%;
+}
+
+.readings-table td:last-child {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.readings-table meter {
+  width: 100%;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
+/* Photos ------------------------------------------------------------------ */
+
+.photos {
+  margin-top: var(--space-12);
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.photo-card {
+  margin: 0;
+}
+
+.photo-card img {
+  width: 100%;
+  height: auto;
+  background: var(--tint);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+}
+
+.photo-card figcaption {
+  margin-top: var(--space-2);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.photo-card .photo-title {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.note {
+  margin-top: var(--space-4);
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--line);
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+/* Prose pages ------------------------------------------------------------- */
+
+.prose {
+  max-width: var(--measure);
+}
+
+.prose h2 {
+  margin-top: var(--space-8);
+}
+
+.prose li {
+  margin-bottom: var(--space-2);
+}
+
+/* Footer ------------------------------------------------------------------ */
+
+.site-footer {
+  margin-top: var(--space-12);
+  padding-block: var(--space-6);
+  border-top: var(--border);
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.site-footer p {
+  max-width: 65ch;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
