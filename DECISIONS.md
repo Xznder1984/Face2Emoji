@@ -115,3 +115,25 @@ Every judgement call made while building, with one line of reasoning.
   `INFO: Created TensorFlow Lite XNNPACK delegate for CPU.` to stderr, and its JavaScript glue
   forwards stderr to `console.error`. There is no supported way to silence it, so it is allowlisted
   by exact text in the test rather than patched over, and recorded in the report.
+- **MediaPipe's own telemetry is blocked on purpose, and that is a console error.** The runtime tries
+  to reach `https://odml.pa.googleapis.com/v1/log`, and the Content-Security-Policy refuses it. That
+  is the policy working as intended — nothing about a visitor's face should be able to leave the
+  machine — but the browser still logs a refused connection. It is recorded here rather than
+  silenced by widening `connect-src`, because widening it would be the wrong trade.
+
+## Photo lookup
+
+- **A photo is shown only when its licence is on a list of free licences.** "Freely licensed" is a
+  claim the grid has to be able to show evidence for, so a missing licence is a reason to drop the
+  file rather than guess at one.
+- **The list is matched against the whole licence name, and restrictions are checked first.** An
+  early version accepted only names containing "cc", which threw away `Public domain` and `CC0` —
+  the two most free licences Commons offers — and left the grid empty on a real run. `CC BY-NC 4.0`
+  contains "cc by", so non-commercial and no-derivatives are rejected before the free list is
+  consulted.
+- **The search phrase is the rule's own `searchTerm`, sent only after the expression has settled.**
+  A pose held for a second costs one request; holding it longer costs none, because the result is
+  cached for the session.
+- **Turning the box off abandons anything on the wire.** The cache survives, so turning the camera
+  back on does not refetch, but a request already in flight is cancelled rather than allowed to
+  finish.

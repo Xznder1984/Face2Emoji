@@ -6,6 +6,8 @@ import {
   startCamera,
   type Camera,
 } from './camera';
+import { createPhotoCache } from './cache';
+import { createDebounce } from './debounce';
 import { deriveFeatures, type Blendshapes, type Features } from './features';
 import { createLandmarker, type LandmarkerHandle } from './landmarker';
 import {
@@ -16,7 +18,7 @@ import {
   rollTarget,
   stepRoll,
 } from './roll';
-import { matchRule, NEUTRAL_RULE } from './rules';
+import { matchRule, NEUTRAL_RULE, ruleById, type Rule } from './rules';
 import {
   addCalibrationSample,
   applyCalibration,
@@ -25,6 +27,7 @@ import {
   type NeutralCalibration,
 } from './smoothing';
 import { createSettle, stepSettle } from './settle';
+import { createPhotoGrid, photoStatusMessage } from './ui/photoGrid';
 import { createReadout, prefersReducedMotion } from './ui/readout';
 import { createReadings } from './ui/readings';
 import { createStatus } from './ui/status';
@@ -63,6 +66,7 @@ const readout = createReadout({
   label: need<HTMLElement>('#expression-label'),
 });
 const readings = createReadings(readingsDetails, readingsBody);
+const photoGrid = createPhotoGrid(need<HTMLElement>('#photo-grid'));
 const faceCtx = canvasEl.getContext('2d');
 
 /* Constants --------------------------------------------------------------- */
@@ -73,9 +77,6 @@ const NO_FACE_MS = 800;
 /** Fallback frame size if the video has not reported one yet. */
 const FALLBACK_WIDTH = 640;
 const FALLBACK_HEIGHT = 480;
-
-const PHOTOS_OFF_MESSAGE = 'Photo lookup is off. Nothing is sent to Wikimedia.';
-const PHOTOS_ON_MESSAGE = 'Photo lookup is on. Short search phrases go to Wikimedia Commons.';
 
 /* State ------------------------------------------------------------------- */
 
@@ -136,10 +137,50 @@ function renderOptionalLinks(): void {
 
 /* Photos: off until the visitor ticks the box. ---------------------------- */
 
+/**
+ * The only outgoing request in the whole app, and only once the box is ticked.
+ *
+ * The search is held back until the expression has settled, so a pose held for
+ * a second costs exactly one request, and the cache means holding it longer
+ * costs none at all.
+ */
+const photoCache = createPhotoCache();
+const searchAfterSettle = createDebounce(() => {
+  void photoCache.select(photoTerm);
+});
+
+/** The phrase currently worth searching for, or null when there is nothing to. */
+let photoTerm: string | null = null;
+
+function setPhotoTerm(rule: Rule | null): void {
+  const term = rule?.searchTerm ?? null;
+  if (term === photoTerm) return;
+  photoTerm = term;
+  searchAfterSettle();
+}
+
+function setPhotosOn(enabled: boolean): void {
+  if (!enabled) {
+    // Turning the box off has to stop anything already on its way.
+    searchAfterSettle.cancel();
+    photoTerm = null;
+    photoCache.clear();
+    photoGrid.clear();
+  } else if (photoTerm) {
+    searchAfterSettle();
+  }
+}
+
+photoCache.subscribe((state) => {
+  photoGrid.render(state);
+  photoStatus.set(photoStatusMessage(state, photosToggle.checked));
+});
+
 photosToggle.checked = PHOTOS_DEFAULT_ON;
-photoStatus.set(photosToggle.checked ? PHOTOS_ON_MESSAGE : PHOTOS_OFF_MESSAGE);
+photoStatus.set(photoStatusMessage({ status: 'idle' }, photosToggle.checked));
 photosToggle.addEventListener('change', () => {
-  photoStatus.set(photosToggle.checked ? PHOTOS_ON_MESSAGE : PHOTOS_OFF_MESSAGE);
+  setPhotosOn(photosToggle.checked);
+  photoStatus.set(photoStatusMessage(photoCache.state(), photosToggle.checked));
 });
 
 /* Buttons ----------------------------------------------------------------- */
@@ -249,12 +290,18 @@ function stop(): void {
   readout.setRoll(0);
   refreshButtons();
   status.set('Camera is off.');
+
+  // Nothing is being tracked, so there is no expression to look photos up for.
+  // The cache itself survives, so turning the camera back on does not refetch.
+  searchAfterSettle.cancel();
+  photoTerm = null;
 }
 
 // Never leave a camera light on when the page goes away.
 window.addEventListener('pagehide', () => {
   camera?.stop();
   running = false;
+  searchAfterSettle.cancel();
 });
 
 /* The frame loop ---------------------------------------------------------- */
@@ -328,6 +375,9 @@ function tick(): void {
   if (step.changed || !labelSynced) {
     labelSynced = true;
     readout.setRule(rule);
+    // Photos follow the expression actually on screen, which is the one that
+    // has held, not the one currently winning.
+    setPhotoTerm(ruleById(settle.current) ?? rule);
   }
 
   updateRoll(landmarks);
