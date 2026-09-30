@@ -83,3 +83,35 @@ Every judgement call made while building, with one line of reasoning.
   rebuilding a table 30 times a second for a closed panel is wasted work.
 - **Detection is skipped when `video.currentTime` has not moved**, which is the cheapest way to
   avoid re-running the model on a frame that has not changed.
+
+## The camera path, checked in a browser
+
+- **`video.play()` is called explicitly.** Setting `srcObject` is not enough: the element loads a
+  first frame and reports dimensions, but `currentTime` never advances unless it is told to play, and
+  the frame loop skips anything whose `currentTime` has not moved. The fake-camera run caught this.
+- **`waitForVideo` gives up after ten seconds** rather than waiting on an event that may never come,
+  because a start button that hangs forever is worse than a start that fails with a sentence.
+- **`cameraErrorMessage` unwraps a `CameraError`.** The class keeps its failure code as its own
+  message, so passing one straight through would have printed the word "unknown" at the visitor. The
+  underlying reason is now shown, and a test asserts the word never appears.
+- **"Loading the face model..." is not styled as an error**, because it is progress, not a problem,
+  and an error-styled live region is announced the wrong way.
+- **`[hidden]` is forced to `display: none !important`.** The stylesheet sets `video { display:
+  block }`, and an author rule beats the browser's `[hidden]` rule regardless of specificity, so a
+  stopped camera left an empty black box sitting over the panel. The fake-camera run caught this too.
+
+## Testing
+
+- **Playwright runs against the production build**, served by `vite preview`, so the checks exercise
+  the real bundled output and the real Content-Security-Policy meta tag.
+- **Clicks made while the camera is running are dispatched directly, not through Playwright's
+  actionability wait.** The fake device shows a synthetic pattern with no face in it, so every frame
+  goes through a full inference, and on the CPU delegate that blocks the main thread long enough that
+  Playwright can never observe two stable animation frames. Keyboard operability is tested separately
+  with the camera off, where the main thread is idle.
+- **The end-to-end timeouts are generous** (180 s per test). They are not measuring inference speed;
+  measuring that would need a real face on a real GPU, which is out of scope here.
+- **One third-party console line is allowlisted.** MediaPipe's bundled TensorFlow Lite runtime prints
+  `INFO: Created TensorFlow Lite XNNPACK delegate for CPU.` to stderr, and its JavaScript glue
+  forwards stderr to `console.error`. There is no supported way to silence it, so it is allowlisted
+  by exact text in the test rather than patched over, and recorded in the report.

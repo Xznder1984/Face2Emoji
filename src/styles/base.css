@@ -29,6 +29,12 @@ canvas {
   max-width: 100%;
 }
 
+/* The `hidden` attribute has to beat the `display: block` reset above, or a
+   stopped camera would keep showing an empty black box over the panel. */
+[hidden] {
+  display: none !important;
+}
+
 h1,
 h2,
 h3 {

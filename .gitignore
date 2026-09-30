@@ -12,3 +12,9 @@ dist/
 # not committed. The MediaPipe WASM comes out of the installed npm package and
 # the face model is downloaded, because its licence is not stated upstream.
 public/mediapipe/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+.playwright/
