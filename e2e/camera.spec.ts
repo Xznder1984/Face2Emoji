@@ -143,6 +143,21 @@ test('setting a neutral face asks for a relaxed pose', async ({ page }) => {
   await expect(page.locator('#status')).toHaveText('Camera is off.');
 });
 
+test('the display radio swaps the emoji for a drawn face', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#emoji-roll')).toBeVisible();
+  await expect(page.locator('#emoji-live')).toBeHidden();
+
+  await page.getByRole('radio', { name: 'Live emoji face' }).check();
+  await expect(page.locator('#emoji-live')).toBeVisible();
+  await expect(page.locator('#emoji-roll')).toBeHidden();
+  await expect(page.locator('#emoji-live svg')).toBeVisible();
+
+  await page.getByRole('radio', { name: 'Match an emoji' }).check();
+  await expect(page.locator('#emoji-roll')).toBeVisible();
+  await expect(page.locator('#emoji-live')).toBeHidden();
+});
+
 test('a blocked camera shows the plain-language message', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {

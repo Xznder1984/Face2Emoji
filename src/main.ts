@@ -28,6 +28,7 @@ import {
 } from './smoothing';
 import { createSettle, stepSettle } from './settle';
 import { createPhotoGrid, photoStatusMessage } from './ui/photoGrid';
+import { createLiveFace } from './ui/liveFace';
 import { createReadout, prefersReducedMotion } from './ui/readout';
 import { createReadings } from './ui/readings';
 import { createStatus } from './ui/status';
@@ -67,6 +68,11 @@ const readout = createReadout({
 });
 const readings = createReadings(readingsDetails, readingsBody);
 const photoGrid = createPhotoGrid(need<HTMLElement>('#photo-grid'));
+const liveFace = createLiveFace(need<HTMLElement>('#emoji-live'));
+const emojiRoll = need<HTMLElement>('#emoji-roll');
+const displayRadios = Array.from(
+  document.querySelectorAll<HTMLInputElement>('input[name="display"]'),
+);
 const faceCtx = canvasEl.getContext('2d');
 
 /* Constants --------------------------------------------------------------- */
@@ -182,6 +188,30 @@ photosToggle.addEventListener('change', () => {
   setPhotosOn(photosToggle.checked);
   photoStatus.set(photoStatusMessage(photoCache.state(), photosToggle.checked));
 });
+
+/* Display: a plain emoji, or a drawn face that mirrors the visitor. -------- */
+
+type DisplayMode = 'emoji' | 'live';
+
+function currentDisplay(): DisplayMode {
+  const checked = displayRadios.find((radio) => radio.checked);
+  return checked?.value === 'live' ? 'live' : 'emoji';
+}
+
+function applyDisplay(mode: DisplayMode): void {
+  const live = mode === 'live';
+  emojiRoll.hidden = live;
+  if (live) {
+    liveFace.show();
+  } else {
+    liveFace.hide();
+  }
+}
+
+for (const radio of displayRadios) {
+  radio.addEventListener('change', () => applyDisplay(currentDisplay()));
+}
+applyDisplay(currentDisplay());
 
 /* Buttons ----------------------------------------------------------------- */
 
@@ -383,6 +413,10 @@ function tick(): void {
   updateRoll(landmarks);
   drawOverlay(landmarks);
   readings.update(features, now);
+
+  // The drawn face follows the same smoothed signals, so it moves with the
+  // visitor even when the emoji has not changed yet.
+  if (liveFace.visible()) liveFace.update(features);
 }
 
 /* Head tilt --------------------------------------------------------------- */

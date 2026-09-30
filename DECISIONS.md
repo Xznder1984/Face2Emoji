@@ -137,3 +137,13 @@ Every judgement call made while building, with one line of reasoning.
 - **Turning the box off abandons anything on the wire.** The cache survives, so turning the camera
   back on does not refetch, but a request already in flight is cancelled rather than allowed to
   finish.
+
+## The drawn face
+
+- **"Live emoji face" is a second display mode, not a second tracker.** It reads the same smoothed
+  signals as the rule list, so the face and the emoji can never disagree about what they are
+  showing, and it costs no extra inference.
+- **The face is built with `createElementNS` and updated through attributes**, never from a string
+  of markup, for the same reason as the photo grid.
+- **The face only animates while a face is actually being tracked.** With no face in frame it sits
+  still at its resting pose rather than twitching at noise, and the label keeps saying it is waiting.

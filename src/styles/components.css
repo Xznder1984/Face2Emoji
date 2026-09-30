@@ -99,6 +99,45 @@
   height: auto;
 }
 
+/* The drawn face. Every part is positioned by the script, so the transitions
+   here are what make it move smoothly rather than jump. */
+.lf-face {
+  fill: var(--face);
+}
+
+.lf-eye {
+  fill: var(--on-stage);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 90ms ease-out;
+}
+
+.lf-brow {
+  fill: var(--on-stage);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 120ms ease-out, y 120ms ease-out;
+}
+
+.lf-mouth {
+  fill: var(--on-stage);
+  transition: opacity 120ms ease-out;
+}
+
+.lf-tongue {
+  fill: #e2543e;
+  transition: opacity 120ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lf-eye,
+  .lf-brow,
+  .lf-mouth,
+  .lf-tongue {
+    transition: none;
+  }
+}
+
 .emoji-label {
   position: absolute;
   bottom: var(--space-4);
