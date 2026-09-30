@@ -29,7 +29,7 @@ export const COMMONS_FIXTURE = {
             size: 2_411_776,
             width: 2_304,
             height: 1_536,
-            thumburl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Woman_yawning.jpg/320px-Woman_yawning.jpg',
+            thumburl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Woman_yawning.jpg/320px-Woman_yawning.jpg',
             thumbwidth: 320,
             thumbheight: 213,
             extmetadata: {
@@ -124,7 +124,7 @@ export const COMMONS_FIXTURE = {
             width: 200,
             height: 200,
             thumburl:
-              'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Script_injection.jpg/320px-Script_injection.jpg',
+              'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Script_injection.jpg/320px-Script_injection.jpg',
             extmetadata: {
               LicenseShortName: { value: 'CC0', source: 'commons-desc-page' },
               Artist: { value: 'Nobody', source: 'commons-desc-page' },
@@ -169,7 +169,7 @@ export const COMMONS_FIXTURE = {
             width: 1_000,
             height: 800,
             thumburl:
-              'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Jpeg_yawn.jpg/320px-Jpeg_yawn.jpg',
+              'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/Jpeg_yawn.jpg/320px-Jpeg_yawn.jpg',
             extmetadata: {
               LicenseShortName: { value: 'CC BY-SA 2.5', source: 'commons-desc-page' },
               Artist: { value: 'Another volunteer', source: 'commons-desc-page' },
@@ -186,7 +186,7 @@ export const COMMONS_FIXTURE = {
 export const photoFixture = {
   title: 'File:Woman yawning.jpg',
   thumbnail:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Woman_yawning.jpg/320px-Woman_yawning.jpg',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Woman_yawning.jpg/320px-Woman_yawning.jpg',
   fileUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Woman_yawning.jpg',
   pageUrl: 'https://commons.wikimedia.org/wiki/File:Woman_yawning.jpg',
   licence: 'CC BY-SA 4.0',

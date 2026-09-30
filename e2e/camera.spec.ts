@@ -20,17 +20,29 @@ interface Network {
 }
 
 /**
- * MediaPipe's bundled TensorFlow Lite runtime prints one informational line to
- * stderr, and its JavaScript glue forwards stderr to `console.error`. It is a
- * message from the third-party runtime, not an error in this code, and there is
- * no supported way to silence it. It is allowlisted here rather than patched
- * over, and it is recorded in DECISIONS.md and ACCESSIBILITY.md.
+ * Console output that comes from the third-party runtime rather than from this
+ * code, and that there is no supported way to change.
+ *
+ * The first is MediaPipe's bundled TensorFlow Lite runtime printing an
+ * informational line to stderr, which its JavaScript glue forwards to
+ * `console.error`.
+ *
+ * The second and third are the Content-Security-Policy refusing MediaPipe's own
+ * attempt to reach `https://odml.pa.googleapis.com/v1/log`. That block is the
+ * policy working as intended — nothing about a visitor's face should be able to
+ * leave the machine — but the browser logs a refused connection either way.
+ * They are allowlisted rather than silenced by widening `connect-src`, because
+ * widening it would be the wrong trade.
  */
-const THIRD_PARTY_INFO = [/^INFO: Created TensorFlow Lite XNNPACK delegate for CPU\.$/];
+const KNOWN_THIRD_PARTY = [
+  /^INFO: Created TensorFlow Lite XNNPACK delegate for CPU\.$/,
+  /^Connecting to 'https:\/\/odml\.pa\.googleapis\.com\/v1\/log' violates the following Content Security Policy directive/,
+  /^Fetch API cannot load https:\/\/odml\.pa\.googleapis\.com\/v1\/log\. Refused to connect because it violates the document's Content Security Policy\.$/,
+];
 
-/** Anything on the console that is not a known third-party information line. */
+/** Anything on the console that is not a known third-party message. */
 function unexpected(messages: string[]): string[] {
-  return messages.filter((text) => !THIRD_PARTY_INFO.some((pattern) => pattern.test(text)));
+  return messages.filter((text) => !KNOWN_THIRD_PARTY.some((pattern) => pattern.test(text)));
 }
 
 function watch(page: Page): Network {
@@ -156,6 +168,54 @@ test('the display radio swaps the emoji for a drawn face', async ({ page }) => {
   await page.getByRole('radio', { name: 'Match an emoji' }).check();
   await expect(page.locator('#emoji-roll')).toBeVisible();
   await expect(page.locator('#emoji-live')).toBeHidden();
+});
+
+test('holds together at 320 pixels wide', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/');
+
+  // Nothing scrolls sideways.
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+
+  // The controls are still reachable and still meet the target size.
+  for (const name of ['Start camera', 'Stop camera', 'Set neutral face']) {
+    const box = await page.getByRole('button', { name }).boundingBox();
+    expect(box).not.toBeNull();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
+
+  // The radio group is still usable.
+  await page.getByRole('radio', { name: 'Live emoji face' }).check();
+  await expect(page.locator('#emoji-live')).toBeVisible();
+});
+
+test('still works at 200 percent zoom', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  await page.evaluate(() => {
+    document.body.style.zoom = '200%';
+  });
+
+  await expect(page.getByRole('button', { name: 'Start camera' })).toBeVisible();
+  await page.getByRole('button', { name: 'Start camera' }).click();
+  await expect(page.locator('#status')).toContainText('Camera is on', { timeout: 120_000 });
+});
+
+test('honours reduced motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+
+  const motion = await page.evaluate(() =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  expect(motion).toBe(true);
+
+  // The app still runs; only the animation is dropped.
+  await page.getByRole('button', { name: 'Start camera' }).click();
+  await expect(page.locator('#status')).toContainText('Camera is on', { timeout: 120_000 });
 });
 
 test('a blocked camera shows the plain-language message', async ({ page }) => {

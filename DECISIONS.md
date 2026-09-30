@@ -119,7 +119,8 @@ Every judgement call made while building, with one line of reasoning.
   to reach `https://odml.pa.googleapis.com/v1/log`, and the Content-Security-Policy refuses it. That
   is the policy working as intended — nothing about a visitor's face should be able to leave the
   machine — but the browser still logs a refused connection. It is recorded here rather than
-  silenced by widening `connect-src`, because widening it would be the wrong trade.
+  silenced by widening `connect-src`, because widening it would be the wrong trade. The end-to-end
+  checks allowlist that message by exact text, alongside the TensorFlow Lite informational line.
 
 ## Photo lookup
 
@@ -134,6 +135,11 @@ Every judgement call made while building, with one line of reasoning.
 - **The search phrase is the rule's own `searchTerm`, sent only after the expression has settled.**
   A pose held for a second costs one request; holding it longer costs none, because the result is
   cached for the session.
+- **Thumbnails are allowed from both of Wikimedia's thumbnail hosts.** Commons serves them from
+  `thumb.wikimedia.org` and, for older files, `upload.wikimedia.org`. An earlier version allowed only
+  the second, which silently dropped every current result — the grid came back empty on a live run
+  while the recorded fixture, built with the old host, still passed. Both hosts are named in the
+  Content-Security-Policy as well as in the URL check.
 - **Turning the box off abandons anything on the wire.** The cache survives, so turning the camera
   back on does not refetch, but a request already in flight is cancelled rather than allowed to
   finish.

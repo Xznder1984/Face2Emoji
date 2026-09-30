@@ -123,9 +123,21 @@ describe('safeUrl', () => {
     expect(safeUrl(42, ['upload.wikimedia.org'])).toBeNull();
   });
 
+  it('allows thumbnails on both of Wikimedia’s thumbnail hosts', () => {
+    expect(safeUrl('https://thumb.wikimedia.org/wikipedia/commons/thumb/a/b.jpg/320px-b.jpg', [
+      'upload.wikimedia.org',
+      'thumb.wikimedia.org',
+    ])).not.toBeNull();
+    expect(safeUrl('https://upload.wikimedia.org/wikipedia/commons/thumb/a/b.jpg/320px-b.jpg', [
+      'upload.wikimedia.org',
+      'thumb.wikimedia.org',
+    ])).not.toBeNull();
+  });
+
   it('is not fooled by a lookalike host', () => {
     expect(safeUrl('https://upload.wikimedia.org.evil.test/x.jpg', ['upload.wikimedia.org'])).toBeNull();
     expect(safeUrl('https://evil.test/?u=upload.wikimedia.org', ['upload.wikimedia.org'])).toBeNull();
+    expect(safeUrl('https://thumb.wikimedia.org.evil.test/x.jpg', ['thumb.wikimedia.org'])).toBeNull();
   });
 });
 

@@ -69,8 +69,12 @@ export function isFreeLicence(name: string): boolean {
   return FREE_LICENCES.some((licence) => normalised.includes(licence));
 }
 
-/** Host for thumbnails. Anything else is dropped rather than rendered. */
-const THUMBNAIL_HOST = 'upload.wikimedia.org';
+/**
+ * Hosts for thumbnails. Commons serves them from `thumb.wikimedia.org` and,
+ * for older files, `upload.wikimedia.org`. Both are Wikimedia's own. Anything
+ * else is dropped rather than rendered.
+ */
+const THUMBNAIL_HOSTS: readonly string[] = ['upload.wikimedia.org', 'thumb.wikimedia.org'];
 
 /** Host for the "read more" links, which point at the Commons description page. */
 const PAGE_HOST = 'commons.wikimedia.org';
@@ -153,7 +157,7 @@ export function toPhoto(page: unknown): CommonsPhoto | null {
   const info = record['imageinfo'][0] as Record<string, unknown> | undefined;
   if (!info) return null;
 
-  const thumbnail = safeUrl(info['thumburl'], [THUMBNAIL_HOST]);
+  const thumbnail = safeUrl(info['thumburl'], THUMBNAIL_HOSTS);
   if (!thumbnail) return null;
 
   const meta = (info['extmetadata'] ?? {}) as Record<string, Record<string, unknown>>;
@@ -169,7 +173,7 @@ export function toPhoto(page: unknown): CommonsPhoto | null {
     title,
     thumbnail,
     // The full-size URL is behind a link, so it goes through the same check.
-    fileUrl: safeUrl(info['url'], [THUMBNAIL_HOST]) ?? thumbnail,
+    fileUrl: safeUrl(info['url'], THUMBNAIL_HOSTS) ?? thumbnail,
     pageUrl,
     licence,
     licenceUrl:
