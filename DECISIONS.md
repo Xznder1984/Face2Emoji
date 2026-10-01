@@ -86,6 +86,24 @@ Every judgement call made while building, with one line of reasoning.
 
 ## The camera path, checked in a browser
 
+- **The model runs in a worker, not on the main thread.** `detectForVideo` is a synchronous call
+  that blocks for as long as the inference takes. On a machine with no usable GPU that measured 2.3
+  seconds per frame on the main thread, which froze the page the moment the camera was granted.
+  In a worker the main thread stays at 60 fps throughout. The cost is a one-frame delay on the
+  result, which expression matching does not care about.
+- **The worker is a classic worker, and MediaPipe is loaded with `importScripts`.** A module worker
+  could not initialise the WASM module at all — every `createFromOptions` failed with "ModuleFactory
+  not set", whether MediaPipe was bundled by Vite or imported at runtime. The UMD bundle in
+  `public/mediapipe/vision_bundle.js` sets `self.Vision`, which is where `FaceLandmarker` and
+  `FilesetResolver` live. The ES module build exposes them on a module namespace instead, and the
+  `.cjs` build is served as `application/node`, which a browser will not execute.
+- **Frames reach the worker as downscaled `ImageBitmap`s.** The preview stays at 640 by 480, but the
+  model sees 320 by 240, which is four times cheaper. The bitmap is transferred, not copied, and the
+  worker closes it.
+- **Inference is throttled to ten frames a second.** The shortest hold time is two hundred
+  milliseconds, so ten samples a second is plenty, and it leaves the worker idle between frames.
+- **Frames sent before the model is ready are dropped**, not queued: the camera has only just started,
+  and a backlog of stale frames would only add latency.
 - **`video.play()` is called explicitly.** Setting `srcObject` is not enough: the element loads a
   first frame and reports dimensions, but `currentTime` never advances unless it is told to play, and
   the frame loop skips anything whose `currentTime` has not moved. The fake-camera run caught this.

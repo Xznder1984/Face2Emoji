@@ -9,7 +9,8 @@ import {
 import { createPhotoCache } from './cache';
 import { createDebounce } from './debounce';
 import { deriveFeatures, type Blendshapes, type Features } from './features';
-import { createLandmarker, type LandmarkerHandle } from './landmarker';
+import { createLandmarker, type DetectionResult, type LandmarkerHandle } from './landmarker';
+import type { Category } from '@mediapipe/tasks-vision';
 import {
   LEFT_EYE_OUTER,
   RIGHT_EYE_OUTER,
@@ -100,6 +101,7 @@ let settle = createSettle(NEUTRAL_RULE.id);
 let roll = 0;
 
 let lastVideoTime = -1;
+let lastInferenceAt = 0;
 let lastFaceAt = 0;
 let everSawFace = false;
 let labelSynced = false;
@@ -231,6 +233,15 @@ async function loadModel(): Promise<LandmarkerHandle> {
     status.set('Loading the face model...');
     loadingModel = createLandmarker()
       .then((handle) => {
+        // Results arrive from the worker from now on.
+        handle.onResult((result, now) => {
+          inferenceBusy = false;
+          processResult(result.landmarks[0], result.categories?.[0]?.categories, now);
+        });
+        handle.onError((message) => {
+          inferenceBusy = false;
+          if (running) status.set(cameraErrorMessage('unknown', new Error(message)), 'error');
+        });
         model = handle;
         loadingModel = null;
         return handle;
@@ -296,6 +307,7 @@ async function begin(): Promise<void> {
   labelSynced = false;
   noFaceShown = false;
   lastVideoTime = -1;
+  lastInferenceAt = 0;
   smoothed = {};
   settle = createSettle(NEUTRAL_RULE.id);
   videoEl.hidden = false;
@@ -316,6 +328,7 @@ function stop(): void {
   videoEl.hidden = true;
   cameraNoteEl.hidden = false;
   lastVideoTime = -1;
+  lastInferenceAt = 0;
   smoothed = {};
   readout.setRoll(0);
   refreshButtons();
@@ -332,35 +345,45 @@ window.addEventListener('pagehide', () => {
   camera?.stop();
   running = false;
   searchAfterSettle.cancel();
+  model?.terminate();
 });
 
 /* The frame loop ---------------------------------------------------------- */
 
-function tick(): void {
-  frameRequest = requestAnimationFrame(tick);
-  // Do no work at all while the tab is in the background.
-  if (!running || document.hidden) return;
+/**
+ * How often the model runs.
+ *
+ * Expression matching does not need sixty frames a second: the shortest hold
+ * time is two hundred milliseconds, so ten samples a second is plenty. Running
+ * the model on every animation frame measured 2.3 seconds of main-thread block
+ * per frame on a software-rendered GPU, which made the page unresponsive the
+ * moment the camera was granted.
+ */
+const INFERENCE_INTERVAL_MS = 100;
 
-  // Only re-run the model when the video actually produced a new frame.
-  if (videoEl.currentTime === lastVideoTime) return;
-  lastVideoTime = videoEl.currentTime;
+/**
+ * The resolution the model actually sees.
+ *
+ * The preview stays at 640 by 480, but the model runs on a frame a quarter of that size. Face
+ * landmarking is happy at this resolution, and it is four times cheaper.
+ */
+const INFERENCE_WIDTH = 320;
+const INFERENCE_HEIGHT = 240;
 
-  const handle = model;
-  if (!handle) return;
+/** True while a frame is in flight to the worker. */
+let inferenceBusy = false;
 
-  const now = performance.now();
-  let result;
-  try {
-    result = handle.landmarker.detectForVideo(videoEl, now);
-  } catch (error) {
-    stop();
-    status.set(cameraErrorMessage('unknown', error), 'error');
-    return;
-  }
-
-  const landmarks = result.faceLandmarks[0];
-  const categories = result.faceBlendshapes?.[0]?.categories;
-
+/**
+ * Everything that happens with one inference result.
+ *
+ * Split out from the frame loop so the loop only has to hand over a frame; the result arrives later
+ * and is processed here.
+ */
+function processResult(
+  landmarks: DetectionResult['landmarks'][number] | undefined,
+  categories: Category[] | undefined,
+  now: number,
+): void {
   if (!landmarks || !categories) {
     if (sampling) return;
     if (everSawFace && !noFaceShown && now - lastFaceAt > NO_FACE_MS) {
@@ -417,6 +440,38 @@ function tick(): void {
   // The drawn face follows the same smoothed signals, so it moves with the
   // visitor even when the emoji has not changed yet.
   if (liveFace.visible()) liveFace.update(features);
+}
+
+function tick(): void {
+  frameRequest = requestAnimationFrame(tick);
+  // Do no work at all while the tab is in the background.
+  if (!running || document.hidden) return;
+
+  const now = performance.now();
+
+  // Only re-run the model when the video produced a new frame and the last
+  // inference has had time to finish.
+  if (videoEl.currentTime === lastVideoTime) return;
+  if (now - lastInferenceAt < INFERENCE_INTERVAL_MS) return;
+  const handle = model;
+  if (!handle || inferenceBusy) return;
+
+  lastVideoTime = videoEl.currentTime;
+  lastInferenceAt = now;
+  inferenceBusy = true;
+
+  // Hand the current frame to the worker as a bitmap, downscaled to the
+  // resolution the model actually works at. The worker owns the inference, so
+  // the main thread stays free to respond to input.
+  createImageBitmap(videoEl, {
+    resizeWidth: INFERENCE_WIDTH,
+    resizeHeight: INFERENCE_HEIGHT,
+    resizeQuality: 'low',
+  })
+    .then((bitmap) => handle.detect(bitmap, now))
+    .catch(() => {
+      inferenceBusy = false;
+    });
 }
 
 /* Head tilt --------------------------------------------------------------- */

@@ -35,6 +35,12 @@ so loading them makes no third-party request.
 The GPU delegate is tried first and the CPU delegate is the fallback, so the app still runs on a
 machine with no usable GPU. Which one you are on is in the status line.
 
+**The model runs in a worker.** `detectForVideo` blocks for as long as the inference takes, and on a
+machine with no usable GPU that was measured at 2.3 seconds per frame — long enough to freeze the
+page the moment the camera was granted. In a worker the main thread stays responsive and the
+inference happens out of band. The worker loads the UMD build of MediaPipe with `importScripts`;
+a module worker could not initialise the WASM module at all.
+
 ## From 52 scores to 18 signals
 
 `src/features.ts` averages the left and right scores for symmetric movements, so `mouthSmileLeft` and

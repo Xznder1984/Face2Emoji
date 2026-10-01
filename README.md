@@ -55,6 +55,7 @@ licence before you reuse it.
 
 - Frames go from the video element into the model and come back out as numbers. Nothing is stored,
   copied out, uploaded or recorded.
+- The model runs in a worker, so a slow inference never freezes the page.
 - The neutral calibration is memory only. There is no stored biometric sample to leak.
 - The model and its WASM runtime are served from this origin, so loading them makes no third-party
   request.
