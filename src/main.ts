@@ -42,6 +42,16 @@ import { createStatus } from './ui/status';
  * video element into the landmarker and come back out as numbers.
  */
 
+// Keep the local server alive while this tab is open. The server run.py starts
+// stops itself after a period with no activity, so an open tab has to say it is
+// still here. Only done on a local address, so a deployed page makes no
+// pointless requests.
+if (['127.0.0.1', 'localhost'].includes(window.location.hostname)) {
+  window.setInterval(() => {
+    void fetch('/__heartbeat', { method: 'HEAD' }).catch(() => {});
+  }, 10_000);
+}
+
 function need<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`missing element: ${selector}`);

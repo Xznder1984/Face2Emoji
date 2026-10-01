@@ -171,3 +171,15 @@ Every judgement call made while building, with one line of reasoning.
   of markup, for the same reason as the photo grid.
 - **The face only animates while a face is actually being tracked.** With no face in frame it sits
   still at its resting pose rather than twitching at noise, and the label keeps saying it is waiting.
+
+## The dev server
+
+- **`serve` uses a small Python server rather than `vite preview`.** Knowing whether the site is
+  still being used needs a request to be observable, and `vite preview` does not expose that. The
+  Python server serves the same `dist/` and stops itself after a period with no activity.
+- **The page sends a heartbeat every ten seconds, but only on a local address.** An open tab keeps
+  the server alive; close the tab and the heartbeats stop, and the server shuts itself down. Gating it
+  on the hostname means a deployed page makes no pointless requests.
+- **The WASM is served as `application/wasm` explicitly.** The host's mimetypes database cannot be
+  relied on to know that extension, and the browser will refuse to compile a WASM module served as
+  anything else.

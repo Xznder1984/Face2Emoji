@@ -17,6 +17,10 @@ not hand a camera to a page opened from a file.
 
 `run.py` can also do `dev`, `build`, `test` and `e2e`. `npm run dev` and `npm run preview` work too.
 
+`serve` opens the site in your browser and stops the server once it has been left idle for a
+minute, so you do not have to remember to shut it down. `--no-open` skips the browser and `--idle
+SECONDS` changes the timeout.
+
 ## What it does
 
 Press **Start camera** and the page loads a face model, starts the webcam, and matches what it sees

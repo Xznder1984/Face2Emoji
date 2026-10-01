@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and serve the app, and open it in a browser.
+"""Build and serve the app, open it in a browser, and stop when it is left idle.
 
     python3 run.py            build, serve, and open the site
     python3 run.py dev        run the Vite dev server instead
@@ -9,9 +9,11 @@
     python3 run.py e2e        Playwright checks against the fake camera
 
     python3 run.py --no-open  serve without opening a browser
+    python3 run.py --idle 30  stop after 30s with no activity (default 60)
 
 The server binds to 127.0.0.1 so the page is treated as a secure context,
-which is what getUserMedia needs. Ctrl-C stops it.
+which is what getUserMedia needs. Ctrl-C stops it, and so does closing the
+tab: the page sends a heartbeat, and the server stops itself once they stop.
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ ROOT = Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 PORT = 4173
 URL = f"http://{HOST}:{PORT}/"
+IDLE_SECONDS = 60
 
 
 def run(command: list[str]) -> None:
@@ -41,39 +44,41 @@ def build() -> None:
     run(["npm", "run", "build"])
 
 
-def start_server(command: list[str]) -> subprocess.Popen:
-    """Start the server in the background and wait until it answers."""
-    print(f"\n$ {' '.join(command)}", flush=True)
-    server = subprocess.Popen(command, cwd=ROOT)
-
+def wait_for_server() -> None:
+    """Wait until the server answers, so the browser opens a ready page."""
     for _ in range(120):
-        if server.poll() is not None:
-            print("\nThe server exited before it was ready.", file=sys.stderr)
-            return server
         try:
             with urllib.request.urlopen(URL, timeout=1):
-                return server
+                return
         except OSError:
             time.sleep(0.5)
-
     print("\nThe server did not answer in time.", file=sys.stderr)
-    return server
 
 
-def serve(open_browser: bool = True) -> None:
+def serve(open_browser: bool = True, idle_seconds: int = IDLE_SECONDS) -> None:
     if not (ROOT / "dist" / "index.html").exists():
         print("No dist/ yet. Building first.", flush=True)
         build()
-    server = start_server(
-        ["npx", "vite", "preview", "--host", HOST, "--port", str(PORT), "--strictPort"]
+    # Imported here so the other commands do not need the server around.
+    sys.path.insert(0, str(ROOT))
+    from server import serve as serve_with_idle
+
+    print(f"\n$ python3 server.py --host {HOST} --port {PORT} --idle {idle_seconds}", flush=True)
+    server = subprocess.Popen(
+        [sys.executable, "server.py", "--host", HOST, "--port", str(PORT), "--idle", str(idle_seconds)],
+        cwd=ROOT,
     )
+    wait_for_server()
     finish(server, open_browser)
 
 
 def dev(open_browser: bool = True) -> None:
-    server = start_server(
-        ["npx", "vite", "--host", HOST, "--port", str(PORT), "--strictPort"]
+    print(f"\n$ npx vite --host {HOST} --port {PORT} --strictPort", flush=True)
+    server = subprocess.Popen(
+        ["npx", "vite", "--host", HOST, "--port", str(PORT), "--strictPort"],
+        cwd=ROOT,
     )
+    wait_for_server()
     finish(server, open_browser)
 
 
@@ -117,6 +122,13 @@ def main() -> int:
         action="store_true",
         help="serve without opening a browser",
     )
+    parser.add_argument(
+        "--idle",
+        type=int,
+        default=IDLE_SECONDS,
+        metavar="SECONDS",
+        help=f"stop after this long with no activity (default {IDLE_SECONDS})",
+    )
     args = parser.parse_args()
 
     if not (ROOT / "node_modules").exists():
@@ -127,9 +139,16 @@ def main() -> int:
         return 1
 
     open_browser = not args.no_open
-    {"serve": serve, "dev": dev, "build": build, "test": test, "e2e": e2e}[args.command](
-        **({"open_browser": open_browser} if args.command in {"serve", "dev"} else {})
-    )
+    if args.command == "serve":
+        serve(open_browser, args.idle)
+    elif args.command == "dev":
+        dev(open_browser)
+    elif args.command == "build":
+        build()
+    elif args.command == "test":
+        test()
+    elif args.command == "e2e":
+        e2e()
     return 0
 
 
